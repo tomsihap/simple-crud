@@ -53,7 +53,6 @@ $password   = ''; // Par défaut dans WAMP (pour MAMP : 'root')
 try {
     // Essaie de faire ce script...
     $bdd = new PDO('mysql:host='.$host.';dbname='.$dbname.';charset=utf8;port='.$port, $login, $password);
-        
 }
 catch (Exception $e) {
     // Sinon, capture l'erreur et affiche la
@@ -61,5 +60,30 @@ catch (Exception $e) {
 }
 ```
 
+#### Traitement et validation des données
+Avant d'enregistrer en base de données, je valide mes données (qu'elles soient toutes correctes selon mon modèle de données) et je fais des traitements éventuels. C'est le but de la partie back-end ! Travailler les données avant de communiquer avec la base de données.
 
+Même si mes données sont "validées" avec le HTML, on ne peut pas faire confiance aux validations du HTML : on doit tout de même valider en PHP. 
+
+```php
+if (empty($_POST['ma_variable'])) {
+    echo "Attention, la variable ne peut pas être vide.";
+}
+elseif( /* VALIDATIONS SUR LA VARIABLE EN QUESTION */ ) {
+    echo "Une erreur relative à cette validation";
+    
+}
+elseif (/* D'autres validations si besoin...*/) {
+    echo "D'autres erreurs propres aux autres validations...";
+}
+else {
+    // Enfin, le cas où la variable passe tous les tests :
+    // si ma variable est bonne, je met $_POST['ma_variable'] dans une nouvelle variable.
+    $maVar = $_POST['titre'];
+}
+```
+
+> On met dans une nouvelle variable $maVar pour des tests plus tard : en effet, si $maVar existe, c'est que j'ai passé tous les tests propres à cette donnée !
+
+> Pensez à rajouter des validations pour les VARCHAR ! ( strlen(...) )
 
