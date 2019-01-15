@@ -22,6 +22,7 @@ catch (Exception $e) {
     // Sinon, capture l'erreur et affiche la
     die('Erreur : ' . $e->getMessage());
 }
+
 /**
  * Je traite mes données : validations, transformations...
  */
@@ -34,6 +35,9 @@ catch (Exception $e) {
  */
 if (empty($_POST['titre'])) {
     echo "Attention, le titre ne peut pas être vide.";
+}
+elseif( strlen($_POST['titre']) > 50 ) {
+    echo "Attention, le titre ne peut pas être plus grand que 50 caractères.";
 }
 else {
     $titre = $_POST['titre'];
@@ -50,7 +54,7 @@ if (empty($_POST['date_de_sortie'])) {
 /**
  * Pour date de sortie, je dois vérifier que la date est bien un INT valide !
  */
-else if( intval($_POST['date_de_sortie'] <= 0) ){
+else if( intval($_POST['date_de_sortie']) < 1890 || intval($_POST['date_de_sortie']) > 2500 ) {
     echo "Attention, la date doit être une année valide (comprise entre 1890 et 2500).";
 }
 
@@ -62,11 +66,15 @@ else {
     $dateDeSortie = $_POST['date_de_sortie'] . "-01-01";
 }
 
+
 /**
  * Validation de l'existence du réalisateur
  */
 if (empty($_POST['realisateur'])) {
     echo "Attention, le realisateur ne peut pas être vide.";
+}
+elseif( strlen($_POST['realisateur']) > 50 ) {
+    echo "Attention, le nom du réalisateur ne peut pas être supérieur à 50 caractères.";
 }
 else {
     $realisateur = $_POST['realisateur'];
@@ -89,12 +97,11 @@ $genresValides = ['horreur', 'comédie', 'humour', 'thriller'];
 
 // Cas où le genre est vide. Cas valide.
 if (empty($_POST['genre'])) {
-
     $genre = null;
 }
-// Sinon, si le genre est rempli, il doit appartenir à l'array $genresValides.
-elseif( !in_array($_POST['genre'], $genresValides ) ) {
 
+// Sinon, si le genre est rempli, il doit appartenir à l'array $genresValides.
+elseif( !in_array($_POST['genre'], $genresValides) ) {
     echo "Le genre n'est pas valide.";
 }
 
@@ -113,8 +120,9 @@ if (empty($_POST['duree'])) {
 
     $duree = null;
 }
+
 // Sinon, on vérifie que le format est de type "hh:mm" avec une Regex :
-elseif (!preg_match("/^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/",$_POST['duree'])) {
+elseif (!preg_match("/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/", $_POST['duree'])) {
     echo "La durée n'a pas une valeur valide.";
 }
 // Sinon, on a une durée et son format est valide.
@@ -130,7 +138,7 @@ else {
     $hours = substr($_POST['duree'], 0, 2);
 
     // Pour les minutes de HH:MM, on veut les caractères 3 et 4 (MM)
-    $minutes = substr($_POST['duree'], 3, 3);
+    $minutes = substr($_POST['duree'], 3, 5);
 
     // J'ajoute mes heures*60 à mes minutes.
     // J'utilise intval() afin d'être sûr de traiter des INT et non des string.
@@ -159,7 +167,6 @@ else {
 
 // Cas où la note est vide. Cas valide.
 if (empty($_POST['note'])) {
-
     $note = null;
 }
 // Sinon, vérifie que la note est un INT (intval)
@@ -181,32 +188,38 @@ else {
  */
 
 // Si un de mes champs obligatoires est faux/null/false, alors on affiche une erreur.
+// Même si ces trois variables ont déjà été testées en existence, on les teste de nouveau ici
+// car on ne veut pas executer le script de BDD (dans le else) si une des 3 n'existe pas.
+// A l'inverse, sans re-tester, même si on affichait un message d'erreur plus haut
+// (comme "attention le titre n'existe pas"), toutes les instructions du else auraient été 
+// executées (en effet sans tester, il n'y aurait pas de if/else)
 if (empty($titre) || empty($dateDeSortie) || empty($realisateur) ) {
     echo "Attention, le titre, la date de sortie et le réalisateur sont obligatoires !";
 }
+
 else {
 
     $fields = "titre, date_de_sortie, realisateur";
-    $values = '"'. $titre . '", "' . $dateDeSortie . '", "' . $realisateur . '"';
+    $values = '"'. htmlspecialchars($titre) . '", "' . htmlspecialchars($dateDeSortie) . '", "' . htmlspecialchars($realisateur) . '"';
 
     if ($genre) { 
         $fields .= ", genre";
-        $values .= ', "' . $genre . '"';
+        $values .= ', "' . htmlspecialchars($genre) . '"';
     }
     if ($duree) { 
         $fields .= ", duree";
-        $values .= ', "' . $duree . '"';
+        $values .= ', "' . htmlspecialchars($duree) . '"';
     }
     if ($note) { 
         $fields .= ", note";
-        $values .= ', "' . $note . '"';
+        $values .= ', "' . htmlspecialchars($note) . '"';
     }
     if ($acteurPrincipal) { 
         $fields .= ", acteur_principal";
-        $values .= ', "' . $acteurPrincipal . '"';
+        $values .= ', "' . htmlspecialchars($acteurPrincipal) . '"';
     }
 
-    $req = 'INSERT INTO films(' . $fields . ') VALUES ('. $values . ')';
+    $req = 'INSERT INTO films('.$fields.') VALUES ('.$values.')';
 
     var_dump($req);
 

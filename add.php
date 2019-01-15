@@ -35,7 +35,7 @@
         <input class="form-control" type="text" name="acteur_principal" id="filmActeurPrincipal">
 
         <label for="filmNote">Note</label>
-        <input class="form-control" type="number" name="note" id="filmNote" min="0" max="5">
+        <input class="form-control" type="number" name="note" id="filmNote" min="1" max="5">
 
         <button class="btn btn-success" type="submit">Envoyer</button>
     </form>

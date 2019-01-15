@@ -79,7 +79,7 @@ elseif (/* D'autres validations si besoin...*/) {
 else {
     // Enfin, le cas où la variable passe tous les tests :
     // si ma variable est bonne, je met $_POST['ma_variable'] dans une nouvelle variable.
-    $maVar = $_POST['titre'];
+    $maVar = $_POST['ma_variable'];
 }
 ```
 
