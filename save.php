@@ -199,12 +199,16 @@ if (empty($titre) || empty($dateDeSortie) || empty($realisateur) ) {
 
 else {
 
-    $fields = "titre, date_de_sortie, realisateur";
+    // VERSION 1 : J'échappe mes données à la main et je remplis les $fields et $values selon si 
+    // le champ a été rempli par l'utilisateur
+
+    /* $fields = "titre, date_de_sortie, realisateur";
     $values = '"'. htmlspecialchars($titre) . '", "' . htmlspecialchars($dateDeSortie) . '", "' . htmlspecialchars($realisateur) . '"';
 
     if ($genre) { 
         $fields .= ", genre";
         $values .= ', "' . htmlspecialchars($genre) . '"';
+
     }
     if ($duree) { 
         $fields .= ", duree";
@@ -221,7 +225,27 @@ else {
 
     $req = 'INSERT INTO films('.$fields.') VALUES ('.$values.')';
 
-    var_dump($req);
+    $bdd->query($req); */
 
-    $bdd->query($req);
+
+    // VERSION 2 : On utilise un prepare/execute pour échapper les variables.
+    // On utilise nos variables créées plutôt que les $_POST car 1/ elles ont passé les validations ci-dessus
+    // et 2/ si elles n'ont pas été renseignées par l'utilisateur... elles sont égales à null !
+
+    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, code)
+            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note)";
+
+    $res = $bdd->prepare($req);
+
+    $res->execute([
+        'titre' => $titre,
+        'genre' => $genre,
+        'duree' => $duree,
+        'date_de_sortie' => $dateDeSortie,
+        'realisateur' => $realisateur,
+        'acteur_principal' => $acteurPrincipal,
+        'note' => $note
+    ]);
+
 }
+
