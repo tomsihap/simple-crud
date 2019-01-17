@@ -87,3 +87,57 @@ else {
 
 > Pensez à rajouter des validations pour les VARCHAR ! ( strlen(...) )
 
+## R : Read
+
+### Templating
+- Créer une base de template HTML
+- Eventuellement mettre un CSS Bootstrap pour le visuel
+- Comme on n'a pas de structure MVC, on mettra la logique dans le même fichier qui affichera ma liste (la vue : list.php)
+> Cela veut dire que je n'importerai pas de fichier "controller", "helper", mais j'appelerai directement ma base de données et effectuerai mes requêtes dans le même fichier qui affichera les résultats.
+
+### Logique
+- => J'appelle ma BDD avant d'afficher le tableau
+```
+ex. d'appel bdd
+```
+
+- Je créée ma requête SQL (select * ...)
+- J'execute la demande (query) auprès de la base de données ($bdd)
+- Je créée un tableau intermédiaire qui contiendra mes résultats ($shoes)
+- Tant que j'ai des lignes qui viennent de la bdd (while $donnees = $res->fetch() ), je les ajoute à mon tableau intermédiaire ($shoes[] = $donnees)
+- Je fais un var_dump à l'issue du while pour vérifier que les données soient bien dans $shoes
+
+### Restitution des résultats
+
+- Je dessine en HTML mon rendu de résultats avec des données "en dur"
+```
+<ul>
+    <li>Marque - modèle</li>
+    <li>Marque - modèle</li>
+    <li>Marque - modèle</li>
+    <li>Marque - modèle</li>
+    <li>Marque - modèle</li>
+    <li>Marque - modèle</li>
+</ul>
+```
+
+- Une fois satisfait, je dessine mon HTML pour un cas unique (ici : 1 seul <li>) :
+```
+<ul>
+    <li>Marque - modèle</li>
+</ul>
+```
+
+- Je trouve l'élément répétable, c'est à dire le HTML qui sera répété à chaque élément de mon array :
+```
+<li>Marque - modèle</li>
+```
+
+- Une fois l'élément répétable trouvé, c'est lui que je mettrai dans ma boucle foreach ( = "pour chaque élément du tableau, je répète ce html") :
+```php
+<ul>
+    <?php foreach($array as $a) { ?>
+        <li><?= $a['marque']; ?> - <?= $a['modele']; ?></li>
+    <?php } ?>
+</ul>
+```

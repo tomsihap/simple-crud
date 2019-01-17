@@ -247,5 +247,7 @@ else {
         'note' => $note
     ]);
 
+    // Eventuellement, j'affiche la dernière erreur SQL
+    var_dump( $res->errorInfo()  );
 }
 
