@@ -513,9 +513,11 @@ else {
     // Pour ne pas avoir 2 fichiers identiques en noms, je créée un nom aléatoire que je peux préfixer si besoin.
     $nomAleatoire = "shoe_" . uniqid();
 
-    // Le nom de mon image est : $nomAleatoire . "." . l'extension.
     // Pour rappel, l'extension est accessible avec pathinfo($_FILES['imageChaussure']['name'])['extension'].
-    $image = $nomAleatoire . "." . pathinfo($_FILES['imageChaussure']['name'])['extension'];
+    $extension = pathinfo($_FILES['imageChaussure']['name'])['extension'];
+
+    // Le nom de mon image est : nom.extension
+    $image = $nomAleatoire . "." . $extension;
 
     // Enfin, je déplace l'image de son emplacement temporaire ($_FILES['imageChaussure']['tmp_name'])
     // vers le dossier uploads que j'ai créé, avec le nouveau nom ($nomAleatoire).
