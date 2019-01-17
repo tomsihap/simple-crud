@@ -169,7 +169,7 @@ Pour accéder à la fiche et au lien "supprimer" d'un élément, j'ajoute des li
 
 Je créée donc une variable `$_GET` nommée `element` prenant la valeur `$a['id']`.
 
-> Je pourrai accéder à cette variable, depuis `list.php`, avec `$_GET['id']`.
+> Je pourrai accéder à cette variable, depuis `list.php`, avec `$_GET['element']`.
 
 ---
 
