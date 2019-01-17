@@ -238,3 +238,116 @@ On construit un template en HTML qui affichera notre élément.
 </ul>
 ...
 ``` 
+
+---
+
+## D : Delete
+
+J'ai passé en variable $_GET à la page delete.php (ex: `delete.php?element=5`) un ID d'élément à supprimer.
+
+### Base de données
+Je me connecte à la base de données dans le fichier delete.php :
+
+```php
+$host       = 'localhost'; // Hôte de la base de données
+$dbname     = 'phpcourse'; // Nom de la bdd
+$port       = '3308'; // Ou 3308 selon la configuration
+$login      = 'root'; // Par défaut dans WAMP
+$password   = ''; // Par défaut dans WAMP (pour MAMP : 'root')
+
+try {
+    // Essaie de faire ce script...
+    $bdd = new PDO('mysql:host='.$host.';dbname='.$dbname.';charset=utf8;port='.$port, $login, $password);
+}
+catch (Exception $e) {
+    // Sinon, capture l'erreur et affiche la
+    die('Erreur : ' . $e->getMessage());
+}
+```
+
+Comme il s'agit d'une donnée sensible, j'effectue des validations comme je le fais pour un INSERT :
+
+```php
+if (empty($_GET['element'])) {
+    echo "Attention, il faut fournir un ID d'élément à supprimer.";
+}
+
+elseif (intval($_GET['element']) <= 0 ) {
+    echo "Attention, l'ID doit être un entier valide.";
+}
+```
+
+Une fois toutes les validations effectuées, dans le cas `else` (cas où toutes les validations sont passées), je fais ma requête de suppression de données :
+
+```php
+
+else {
+    echo "L'id est correct, on supprime l'élément !<br>";
+
+    // Je met ma requête dans une variable
+    $requete = "DELETE FROM table WHERE id = " . $_GET['element'];
+
+    // J'execute immédiatement la requête sans garder le résultat dans une variable.
+    // En effet, comme ce n'est pas un SELECT, je n'ai pas de résultat retourné.
+    // Donc, pas besoin de "$req = $bdd->query()", je fais directement "$bdd->query()".
+    $bdd->query($requete);
+
+    // J'ajoute un lien de retour vers ma liste.
+    echo "<a href='list.php'>Retour</a>";
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+Je rédige ma requête dans une variable pour récupérer l'élément choisi (SELECT * FROM table WHERE id = mon_id). Pour récupérer l'élément choisi, j'utilise la superglobale `$_GET` qui contient les données passées par l'URL (dans la page list.php, j'ai en effet appelé fiche.php?id=*** ).
+
+```php
+$requete = "SELECT * FROM shoes WHERE id = " . $_GET['id'];
+```
+
+Ensuite, je demande (->query()) ma requête ($requete) à la base de données ($bdd) et je récupère (->fetch()) le résultat de la requête SQL ($reponse) dans une variable ($element):
+
+```php
+$reponse = $bdd->query($requete);
+$element = $reponse->fetch();
+```
+
+> Comme je sais que je n'aurai qu'une seule ligne de retournée (en effet, je fais un WHERE avec une clé primaire, ce qui m'assure de n'avoir qu'un résultat), je ne vais pas utiliser de while(...), mais je récupère la seule ligne directement dans une variable $element.
+
+### Affichage des données
+
+Maintenant que j'ai récupéré l'élément dans ma base de données et l'ai enregistré dans une variable `$element`, je peux l'utiliser pour accéder à ses valeurs :
+
+#### Construction du HTML
+On construit un template en HTML qui affichera notre élément.
+```html
+...
+<ul>
+    <li>Marque : </li>
+    <li>Modèle : </li>
+    <li>Taille : </li>
+</ul>
+...
+``` 
+
+
+#### Remplissage des données 
+
+```php
+...
+<ul>
+    <li>Marque : <?= $element['marque']; ?></li>
+    <li>Modèle : <?= $element['modele']; ?></li>
+    <li>Taille : <?= $element['taille']; ?></li>
+</ul>
+...
+``` 
