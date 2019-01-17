@@ -97,8 +97,24 @@ else {
 
 ### Logique
 - => J'appelle ma BDD avant d'afficher le tableau
-```
-ex. d'appel bdd
+```php
+$host       = 'localhost'; // Hôte de la base de données
+$dbname     = 'phpcourse'; // Nom de la bdd
+$port       = '3308'; // Ou 3308 selon la configuration
+$login      = 'root'; // Par défaut dans WAMP
+$password   = ''; // Par défaut dans WAMP (pour MAMP : 'root')
+/**
+ * Je me connecte à la base de données
+ */
+
+try {
+    // Essaie de faire ce script...
+    $bdd = new PDO('mysql:host='.$host.';dbname='.$dbname.';charset=utf8;port='.$port, $login, $password);
+}
+catch (Exception $e) {
+    // Sinon, capture l'erreur et affiche la
+    die('Erreur : ' . $e->getMessage());
+}
 ```
 
 - Je créée ma requête SQL (select * ...)
@@ -110,7 +126,7 @@ ex. d'appel bdd
 ### Restitution des résultats
 
 - Je dessine en HTML mon rendu de résultats avec des données "en dur"
-```
+```html
 <ul>
     <li>Marque - modèle</li>
     <li>Marque - modèle</li>
@@ -121,15 +137,15 @@ ex. d'appel bdd
 </ul>
 ```
 
-- Une fois satisfait, je dessine mon HTML pour un cas unique (ici : 1 seul <li>) :
-```
+- Une fois satisfait, je dessine mon HTML pour un cas unique (ici : 1 seul li) :
+```html
 <ul>
     <li>Marque - modèle</li>
 </ul>
 ```
 
 - Je trouve l'élément répétable, c'est à dire le HTML qui sera répété à chaque élément de mon array :
-```
+```html
 <li>Marque - modèle</li>
 ```
 

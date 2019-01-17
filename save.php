@@ -248,6 +248,5 @@ else {
     ]);
 
     // Eventuellement, j'affiche la dernière erreur SQL
-    var_dump( $res->errorInfo()  );
+    var_dump( $res->errorInfo() );
 }
-
