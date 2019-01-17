@@ -298,16 +298,6 @@ else {
 
 ```
 
-
-
-
-
-
-
-
-
-
-
 Je rédige ma requête dans une variable pour récupérer l'élément choisi (SELECT * FROM table WHERE id = mon_id). Pour récupérer l'élément choisi, j'utilise la superglobale `$_GET` qui contient les données passées par l'URL (dans la page list.php, j'ai en effet appelé fiche.php?id=*** ).
 
 ```php
@@ -351,3 +341,120 @@ On construit un template en HTML qui affichera notre élément.
 </ul>
 ...
 ``` 
+
+## Traitement des fichiers
+
+Les fichiers dans les formulaires sont transmis par la variable `$_FILES`.
+
+### Modification du formulaire
+
+Pour traiter les fichiers dans les formulaires, il est **obligatoire** de modifier le formulaire comme suit en ajoutant l'attribut `enctype="multipart/form-data"` :
+
+```html
+<form action="save.php" method="post" enctype="multipart/form-data">
+    ...
+</form>
+```
+
+### Input file
+On ajoute au formulaire un input de type "file" en n'oubliant pas l'attribut "name" :
+
+```html
+...
+    <label for="elementImage">Photo</label>
+    <input type="file" name="photoElement" id="elementImage">  
+```
+
+### Récupération des données dans save.php
+
+#### $_FILES
+
+La variable $_FILES contient tous les fichiers uploadés via le formulaire :
+
+```
+array (size=1)
+  'photoElement' => 
+    array (size=5)
+      'name' => string 'shoe04.jpg' (length=10)
+      'type' => string 'image/jpeg' (length=10)
+      'tmp_name' => string 'C:\wamp64\tmp\phpCCC7.tmp' (length=25)
+      'error' => int 0
+      'size' => int 3935
+```
+
+On a accès aux éléments suivants :
+
+```php
+$_FILES['photoElement']; // On utilise le "name" issu du formulaire
+$_FILES['photoElement']['name']; // Contient le nom du fichier envoyé par le visiteur.
+$_FILES['photoElement']['type']; // Indique le type du fichier envoyé. Si c'est une image gif par exemple, le type sera image/gif.
+$_FILES['photoElement']['tmp_name']; // Juste après l'envoi, le fichier est placé dans un répertoire temporaire sur le serveur en attendant que votre script PHP décide si oui ou non il accepte de le stocker pour de bon. Cette variable contient l'emplacement temporaire du fichier.
+$_FILES['photoElement']['error']; // Contient un code d'erreur permettant de savoir si l'envoi s'est bien effectué ou s'il y a eu un problème et si oui, lequel. La variable vaut 0 s'il n'y a pas eu d'erreur.
+$_FILES['photoElement']['size']; // Indique la taille du fichier envoyé. Attention : cette taille est en octets. Il faut environ 1 000 octets pour faire 1 Ko, et 1 000 000 d'octets pour faire 1 Mo. Attention : la taille de l'envoi est limitée par PHP. Par défaut, impossible d'uploader des fichiers de plus de 8 Mo.
+```
+
+Ainsi qu'à la décomposition du nom du fichier avec ` pathinfo($_FILES['photoElement']['name'])`:
+
+```
+array (size=4)
+  'dirname' => string '.' (length=1)
+  'basename' => string 'shoe04.jpg' (length=10)
+  'extension' => string 'jpg' (length=3)
+  'filename' => string 'shoe04' (length=6)
+```
+
+> **Attention :** pathinfo() prend en argument le "name" du fichier envoyé ! Soit : `$_FILES['photoElement']['name']` et pas que `$_FILES['photoElement']`
+
+On a accès aux éléments suivants :
+```php
+pathinfo($_FILES['photoElement']['name'])['dirname']; // Dossier dans lequel se trouve le fichier
+pathinfo($_FILES['photoElement']['name'])['basename']; // nom complet du fichier
+pathinfo($_FILES['photoElement']['name'])['extension']; // Extension du fichier
+pathinfo($_FILES['photoElement']['name'])['filename']; // Nom du fichier sans extension
+```
+
+Comme il est difficile d'utiliser des noms de variables et fonctions aussi longs, on va utiliser des variables intermédiaires :
+
+```php
+
+// Je créée une variable pour le nom du fichier, qui est l'argument de pathinfo() :
+
+$fileName = $_FILES['photoElement']['name'];
+
+// Je peux donc utiliser pathinfo() comme suit : pathinfo($fileName);
+// Comme je veux utiliser des clés dans le tableau que me retourne pathinfo(), je créée une autre variable intermédiaire :
+
+$pathInfo = pathinfo($fileName);
+
+
+// J'ai donc accès aux mêmes variables que ci-dessus de cette façon :
+
+$pathInfo['dirname'];
+$pathInfo['basename'];
+$pathInfo['extension'];
+$pathInfo['filename'];
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+var_dump($_FILES);
+var_dump($_FILES['imageChaussure']);
+var_dump($_FILES['imageChaussure']['name']);
+
+$fileName = $_FILES['imageChaussure']['name'];
+
+$pathInfoImage = pathinfo($fileName);
+
+var_dump( 
+    $pathInfoImage['extension']
+);
