@@ -87,6 +87,8 @@ else {
 
 > Pensez à rajouter des validations pour les VARCHAR ! ( strlen(...) )
 
+---
+
 ## R : Read
 
 ### Templating
@@ -157,6 +159,17 @@ catch (Exception $e) {
     <?php } ?>
 </ul>
 ```
+
+### Ajout des liens
+Pour accéder à la fiche et au lien "supprimer" d'un élément, j'ajoute des liens construits de cette façon :
+
+```php
+<a href="list.php?element=<?= $a['id']; ?>"> <?= $a['nom']; ?></a>
+```
+
+Je créée donc une variable `$_GET` nommée `element` prenant la valeur `$a['id']`.
+
+---
 
 ## Browse
 
