@@ -346,6 +346,11 @@ On construit un template en HTML qui affichera notre élément.
 
 Les fichiers dans les formulaires sont transmis par la variable `$_FILES`.
 
+### Création du dossier Uploads
+
+On créée à la racine du projet un dossier `/uploads` qui contiendra les fichiers envoyés par les utilisateurs.
+
+
 ### Modification du formulaire
 
 Pour traiter les fichiers dans les formulaires, il est **obligatoire** de modifier le formulaire comme suit en ajoutant l'attribut `enctype="multipart/form-data"` :
@@ -393,7 +398,9 @@ $_FILES['photoElement']['error']; // Contient un code d'erreur permettant de sav
 $_FILES['photoElement']['size']; // Indique la taille du fichier envoyé. Attention : cette taille est en octets. Il faut environ 1 000 octets pour faire 1 Ko, et 1 000 000 d'octets pour faire 1 Mo. Attention : la taille de l'envoi est limitée par PHP. Par défaut, impossible d'uploader des fichiers de plus de 8 Mo.
 ```
 
-Ainsi qu'à la décomposition du nom du fichier avec ` pathinfo($_FILES['photoElement']['name'])`:
+#### pathinfo()
+
+On a aussi accès à la décomposition du nom du fichier avec ` pathinfo($_FILES['photoElement']['name'])`:
 
 ```
 array (size=4)
@@ -436,25 +443,83 @@ $pathInfo['filename'];
 
 ```
 
+### Validations de l'input
+
+Comme tous les autres champs de formulaire, j'utilise le même bloc pour valider les données :
+
+```php
+
+/**
+ * 1. VARIABLES INTERMEDIAIRES
+ * Si j'ai besoin de variables pour les validations
+ */
+
+// Je liste les extensions autorisées
+$extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
+
+/**
+ * 2. TEST D'EXISTENCE
+ * Je vérifie que ma variable existe dans le formulaire.
+ * Comme c'est un champ non obligatoire, si elle n'existe pas, je 
+ * retourne $image = null plutôt qu'une erreur.
+ */
+
+// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur
+if (empty($_FILES['imageChaussure'])) {
+    $image = null;
+}
+
+/**
+ * 3. VALIDATIONS
+ * J'effectue mes différentes validations sur mon input. C'est un input type=file,
+ * il y a des validations propres aux fichiers à effectuer :
+ */
+
+// Est-ce qu'il y a eu une erreur lors de l'upload ?
+elseif($_FILES['imageChaussure']['error'] !== 0) {
+    echo "Attention, erreur lors de l'upload de l'image.";
+}
+
+// Testons si le fichier n'est pas trop gros
+elseif ($_FILES['imageChaussure']['size'] >= 800000) {
+    echo "Attention, l'image est trop grosse.";
+}
 
 
+/**
+ * Testons si l'extension est autorisée
+ * Rappel de ci-dessus, pour accéder à l'extension, j'utilise pathinfo() avec en argument
+ * le nom de l'image : $_FILES['imageChaussure']['name'].
+ * 
+ * Mon pathinfo est donc : pathinfo($_FILES['imageChaussure']['name']).
+ * 
+ * J'ai besoin de l'extension du pathinfo ( ['extension'] ), j'y accède avec :
+ * pathinfo($_FILES['imageChaussure']['name'])['extension']
+ * 
+ * !!! Attention aux parenthèses et crochets !
+ */
 
+elseif (!in_array( pathinfo($_FILES['imageChaussure']['name'])['extension'], $extensionsAutorisees) ) {
+    echo "Attention, le fichier n'est pas autorisé.";
+}
 
+/**
+ * 4. ENREGISTREMENT
+ * Enfin, si je passe toutes les validations, au lieu d'avoir un $image = null comme au début,
+ * je met ma donnée dans $image.
+ */
+else {
 
+    // Pour ne pas avoir 2 fichiers identiques en noms, je créée un nom aléatoire que je peux préfixer si besoin.
+    $nomAleatoire = "shoe_" . uniqid();
 
+    // Le nom de mon image est : $nomAleatoire . "." . l'extension.
+    // Pour rappel, l'extension est accessible avec pathinfo($_FILES['imageChaussure']['name'])['extension'].
+    $image = $nomAleatoire . "." . pathinfo($_FILES['imageChaussure']['name'])['extension'];
 
+    // Enfin, je déplace l'image de son emplacement temporaire ($_FILES['imageChaussure']['tmp_name'])
+    // vers le dossier uploads que j'ai créé, avec le nouveau nom ($nomAleatoire).
+    move_uploaded_file($_FILES['imageChaussure']['tmp_name'], 'uploads/' . $image );
+}
 
-
-
-
-var_dump($_FILES);
-var_dump($_FILES['imageChaussure']);
-var_dump($_FILES['imageChaussure']['name']);
-
-$fileName = $_FILES['imageChaussure']['name'];
-
-$pathInfoImage = pathinfo($fileName);
-
-var_dump( 
-    $pathInfoImage['extension']
-);
+```
