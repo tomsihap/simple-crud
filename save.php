@@ -182,6 +182,37 @@ else {
     $note = $_POST['note'];
 }
 
+// Je liste les extensions autorisées
+$extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
+
+// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur
+if (empty($_FILES['affiche'])) {
+    $image = null;
+}
+
+elseif($_FILES['affiche']['error'] !== 0) {
+    echo "Attention, erreur lors de l'upload de l'image.";
+}
+
+// Testons si le fichier n'est pas trop gros
+elseif ($_FILES['affiche']['size'] >= 1000000) {
+    echo "Attention, l'image est trop grosse.";
+}
+
+// Testons si l'extension est autorisée
+// J'accède à l'extension grâce à : pathinfo($_FILES['imageChaussure']['name'])['extension']
+elseif (!in_array( pathinfo($_FILES['affiche']['name'])['extension'], $extensionsAutorisees) ) {
+    echo "Attention, le fichier n'est pas autorisé.";
+}
+
+else {
+
+    $nomAleatoire = "affiche_" . uniqid();
+
+    $image = $nomAleatoire . "." . pathinfo($_FILES['affiche']['name'])['extension'];
+
+    move_uploaded_file($_FILES['affiche']['tmp_name'], 'uploads/' . $image );
+}
 
 /**
  * ENREGISTREMENT EN BDD
@@ -232,8 +263,8 @@ else {
     // On utilise nos variables créées plutôt que les $_POST car 1/ elles ont passé les validations ci-dessus
     // et 2/ si elles n'ont pas été renseignées par l'utilisateur... elles sont égales à null !
 
-    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, code)
-            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note)";
+    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, image)
+            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note, :image)";
 
     $res = $bdd->prepare($req);
 
@@ -244,9 +275,12 @@ else {
         'date_de_sortie' => $dateDeSortie,
         'realisateur' => $realisateur,
         'acteur_principal' => $acteurPrincipal,
-        'note' => $note
+        'note' => $note,
+        'image' => $image
     ]);
 
     // Eventuellement, j'affiche la dernière erreur SQL
     var_dump( $res->errorInfo() );
+
+    echo "<a href='list.php'>Retour</a>";
 }

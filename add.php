@@ -10,7 +10,7 @@
 </head>
 <body>
 
-    <form action="save.php" method="post">
+    <form action="save.php" method="post" enctype="multipart/form-data">
         <label for="filmTitle">Titre du film</label>
         <input class="form-control" type="text" name="titre" id="filmTitle" required>
 
@@ -36,6 +36,9 @@
 
         <label for="filmNote">Note</label>
         <input class="form-control" type="number" name="note" id="filmNote" min="1" max="5">
+
+        <label for="filmImage">Affiche</label>
+        <input type="file" name="affiche" id="filmImage" class="form-control">
 
         <button class="btn btn-success" type="submit">Envoyer</button>
     </form>
