@@ -87,6 +87,51 @@ else {
 
 > Pensez à rajouter des validations pour les VARCHAR ! ( strlen(...) )
 
+#### Enregistrement des données
+
+##### On vérifie nos données obligatoires
+```php
+
+// Si un de mes champs obligatoires est faux/null/false, alors on affiche une erreur.
+// Même si ces trois variables ont déjà été testées en existence, on les teste de nouveau ici
+// car on ne veut pas executer le script de BDD (dans le else) si une des 3 n'existe pas !
+
+// A l'inverse, si je te testais pas de nouveau dans le if, et même si on affichait un message d'erreur plus haut (comme "attention le titre n'existe pas"), toutes les instructions du else auraient été executées (en effet sans tester, il n'y aurait pas de if/else, donc les instructions s'executent toutes seules).
+
+if (empty($titre) || empty($dateDeSortie) || empty($realisateur) ) {
+    echo "Attention, le titre, la date de sortie et le réalisateur sont obligatoires !";
+}
+```
+
+##### Sinon (else => cas où les données existent), on enregistre en BDD
+
+```php
+else {
+    // On utilise nos variables créées plutôt que les $_POST car
+    // 1/ elles ont passé les validations ci-dessus
+    // 2/ si elles n'ont pas été renseignées par l'utilisateur... elles existent et sont égales à null !
+    // Ca me permet donc d'avoir une requête INSERT INTO qui contient systématiquement tous les champs dans table(champ1, champ2, ...), que l'utilisateur ait mis des données ou non.
+
+    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, code)
+            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note)";
+
+    $res = $bdd->prepare($req);
+
+    $res->execute([
+        'titre' => $titre,
+        'genre' => $genre,
+        'duree' => $duree,
+        'date_de_sortie' => $dateDeSortie,
+        'realisateur' => $realisateur,
+        'acteur_principal' => $acteurPrincipal,
+        'note' => $note
+    ]);
+
+    // Eventuellement, j'affiche la dernière erreur SQL si l'enregistrement ne s'effectue pas.
+    var_dump( $res->errorInfo() );
+}
+```
+
 ---
 
 ## R : Read
