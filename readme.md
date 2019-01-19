@@ -1,40 +1,23 @@
-- [simple-crud](#simple-crud)
-  - [Base de données](#base-de-donn%C3%A9es)
-  - [C : Create](#c--create)
-    - [Front](#front)
-    - [Back](#back)
-      - [Récupération des données de formulaire](#r%C3%A9cup%C3%A9ration-des-donn%C3%A9es-de-formulaire)
-      - [Connexion à la BDD](#connexion-%C3%A0-la-bdd)
-      - [Traitement et validation des données](#traitement-et-validation-des-donn%C3%A9es)
-      - [Enregistrement des données](#enregistrement-des-donn%C3%A9es)
-        - [On vérifie nos données obligatoires](#on-v%C3%A9rifie-nos-donn%C3%A9es-obligatoires)
-        - [Sinon (else => cas où les données existent), on enregistre en BDD](#sinon-else--cas-o%C3%B9-les-donn%C3%A9es-existent-on-enregistre-en-bdd)
-  - [R : Read](#r--read)
-    - [Templating](#templating)
-    - [Logique](#logique)
-    - [Restitution des résultats](#restitution-des-r%C3%A9sultats)
-    - [Ajout des liens](#ajout-des-liens)
-  - [Browse](#browse)
-    - [Base de données](#base-de-donn%C3%A9es-1)
-    - [Affichage des données](#affichage-des-donn%C3%A9es)
-      - [Construction du HTML](#construction-du-html)
-      - [Remplissage des données](#remplissage-des-donn%C3%A9es)
-  - [D : Delete](#d--delete)
-    - [Base de données](#base-de-donn%C3%A9es-2)
-    - [Affichage des données](#affichage-des-donn%C3%A9es-1)
-      - [Construction du HTML](#construction-du-html-1)
-      - [Remplissage des données](#remplissage-des-donn%C3%A9es-1)
-  - [Traitement des fichiers](#traitement-des-fichiers)
-    - [Création du dossier Uploads](#cr%C3%A9ation-du-dossier-uploads)
-    - [Modification du formulaire](#modification-du-formulaire)
-    - [Input file](#input-file)
-    - [Récupération des données dans save.php](#r%C3%A9cup%C3%A9ration-des-donn%C3%A9es-dans-savephp)
-      - [$_FILES](#files)
-      - [pathinfo()](#pathinfo)
-    - [Validations de l'input](#validations-de-linput)
+
 
 # simple-crud
 Réalisation d'un CRUD basique pour une application PHP.
+
+La structure est la suivante :
+- `add.php` Formulaire d'ajout et édition d'un élément
+- `save.php` Traitement du formulaire
+- `list.php` Affichage de tous les éléments
+- `show.php` Affichage d'un élément
+- `delete.php` Traitement de la suppression d'un élément
+- 
+
+  - [Base de données](#base-de-donn%C3%A9es)
+  - [C : Create](#c--create)
+  - [INSERT: Traitement des fichiers](#insert-traitement-des-fichiers)
+  - [R : Read](#r--read)
+  - [Browse](#browse)
+  - [D : Delete](#d--delete)
+  - [U : Update](#u--update)
 
 ## Base de données
 On créée la base de données dans PHPMyAdmin ou Mysql Workbench.
@@ -165,6 +148,191 @@ else {
     // Eventuellement, j'affiche la dernière erreur SQL si l'enregistrement ne s'effectue pas.
     var_dump( $res->errorInfo() );
 }
+```
+
+## INSERT: Traitement des fichiers
+
+Les fichiers dans les formulaires sont transmis par la variable `$_FILES`.
+
+### Création du dossier Uploads
+
+On créée à la racine du projet un dossier `/uploads` qui contiendra les fichiers envoyés par les utilisateurs.
+
+
+### Modification du formulaire
+
+Pour traiter les fichiers dans les formulaires, il est **obligatoire** de modifier le formulaire comme suit en ajoutant l'attribut `enctype="multipart/form-data"` :
+
+```html
+<form action="save.php" method="post" enctype="multipart/form-data">
+    ...
+</form>
+```
+
+### Input file
+On ajoute au formulaire un input de type "file" en n'oubliant pas l'attribut "name" :
+
+```html
+...
+    <label for="elementImage">Photo</label>
+    <input type="file" name="photoElement" id="elementImage">  
+```
+
+### Récupération des données dans save.php
+
+#### $_FILES
+
+La variable $_FILES contient tous les fichiers uploadés via le formulaire :
+
+```
+array (size=1)
+  'photoElement' => 
+    array (size=5)
+      'name' => string 'shoe04.jpg' (length=10)
+      'type' => string 'image/jpeg' (length=10)
+      'tmp_name' => string 'C:\wamp64\tmp\phpCCC7.tmp' (length=25)
+      'error' => int 0
+      'size' => int 3935
+```
+
+On a accès aux éléments suivants :
+
+```php
+$_FILES['photoElement']; // On utilise le "name" issu du formulaire
+$_FILES['photoElement']['name']; // Contient le nom du fichier envoyé par le visiteur.
+$_FILES['photoElement']['type']; // Indique le type du fichier envoyé. Si c'est une image gif par exemple, le type sera image/gif.
+$_FILES['photoElement']['tmp_name']; // Juste après l'envoi, le fichier est placé dans un répertoire temporaire sur le serveur en attendant que votre script PHP décide si oui ou non il accepte de le stocker pour de bon. Cette variable contient l'emplacement temporaire du fichier.
+$_FILES['photoElement']['error']; // Contient un code d'erreur permettant de savoir si l'envoi s'est bien effectué ou s'il y a eu un problème et si oui, lequel. La variable vaut 0 s'il n'y a pas eu d'erreur.
+$_FILES['photoElement']['size']; // Indique la taille du fichier envoyé. Attention : cette taille est en octets. Il faut environ 1 000 octets pour faire 1 Ko, et 1 000 000 d'octets pour faire 1 Mo. Attention : la taille de l'envoi est limitée par PHP. Par défaut, impossible d'uploader des fichiers de plus de 8 Mo.
+```
+
+#### pathinfo()
+
+On a aussi accès à la décomposition du nom du fichier avec ` pathinfo($_FILES['photoElement']['name'])`:
+
+```
+array (size=4)
+  'dirname' => string '.' (length=1)
+  'basename' => string 'shoe04.jpg' (length=10)
+  'extension' => string 'jpg' (length=3)
+  'filename' => string 'shoe04' (length=6)
+```
+
+> **Attention :** pathinfo() prend en argument le "name" du fichier envoyé ! Soit : `$_FILES['photoElement']['name']` et pas que `$_FILES['photoElement']`
+
+On a accès aux éléments suivants :
+```php
+pathinfo($_FILES['photoElement']['name'])['dirname']; // Dossier dans lequel se trouve le fichier
+pathinfo($_FILES['photoElement']['name'])['basename']; // nom complet du fichier
+pathinfo($_FILES['photoElement']['name'])['extension']; // Extension du fichier
+pathinfo($_FILES['photoElement']['name'])['filename']; // Nom du fichier sans extension
+```
+
+Comme il est difficile d'utiliser des noms de variables et fonctions aussi longs, on va utiliser des variables intermédiaires :
+
+```php
+
+// Je créée une variable pour le nom du fichier, qui est l'argument de pathinfo() :
+
+$fileName = $_FILES['photoElement']['name'];
+
+// Je peux donc utiliser pathinfo() comme suit : pathinfo($fileName);
+// Comme je veux utiliser des clés dans le tableau que me retourne pathinfo(), je créée une autre variable intermédiaire :
+
+$pathInfo = pathinfo($fileName);
+
+
+// J'ai donc accès aux mêmes variables que ci-dessus de cette façon :
+
+$pathInfo['dirname'];
+$pathInfo['basename'];
+$pathInfo['extension'];
+$pathInfo['filename'];
+
+```
+
+### Validations de l'input
+
+Comme tous les autres champs de formulaire, j'utilise le même bloc pour valider les données :
+
+```php
+
+/**
+ * 1. VARIABLES INTERMEDIAIRES
+ * Si j'ai besoin de variables pour les validations
+ */
+
+// Je liste les extensions autorisées
+$extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
+
+/**
+ * 2. TEST D'EXISTENCE
+ * Je vérifie que ma variable existe dans le formulaire.
+ * Comme c'est un champ non obligatoire, si elle n'existe pas, je 
+ * retourne $image = null plutôt qu'une erreur.
+ */
+
+// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur.
+// J'utile le NOM du fichier (name) et non le champ lui même ! En effet, le champ existe toujours, le nom n'existe que si on a une image.
+if (empty($_FILES['imageChaussure']['name'])) {
+    $image = null;
+}
+
+/**
+ * 3. VALIDATIONS
+ * J'effectue mes différentes validations sur mon input. C'est un input type=file,
+ * il y a des validations propres aux fichiers à effectuer :
+ */
+
+// Est-ce qu'il y a eu une erreur lors de l'upload ?
+elseif($_FILES['imageChaussure']['error'] !== 0) {
+    echo "Attention, erreur lors de l'upload de l'image.";
+}
+
+// Testons si le fichier n'est pas trop gros
+elseif ($_FILES['imageChaussure']['size'] >= 800000) {
+    echo "Attention, l'image est trop grosse.";
+}
+
+
+/**
+ * Testons si l'extension est autorisée
+ * Rappel de ci-dessus, pour accéder à l'extension, j'utilise pathinfo() avec en argument
+ * le nom de l'image : $_FILES['imageChaussure']['name'].
+ * 
+ * Mon pathinfo est donc : pathinfo($_FILES['imageChaussure']['name']).
+ * 
+ * J'ai besoin de l'extension du pathinfo ( ['extension'] ), j'y accède avec :
+ * pathinfo($_FILES['imageChaussure']['name'])['extension']
+ * 
+ * !!! Attention aux parenthèses et crochets !
+ */
+
+elseif (!in_array( pathinfo($_FILES['imageChaussure']['name'])['extension'], $extensionsAutorisees) ) {
+    echo "Attention, le fichier n'est pas autorisé.";
+}
+
+/**
+ * 4. ENREGISTREMENT
+ * Enfin, si je passe toutes les validations, au lieu d'avoir un $image = null comme au début,
+ * je met ma donnée dans $image.
+ */
+else {
+
+    // Pour ne pas avoir 2 fichiers identiques en noms, je créée un nom aléatoire que je peux préfixer si besoin.
+    $nomAleatoire = "shoe_" . uniqid();
+
+    // Pour rappel, l'extension est accessible avec pathinfo($_FILES['imageChaussure']['name'])['extension'].
+    $extension = pathinfo($_FILES['imageChaussure']['name'])['extension'];
+
+    // Le nom de mon image est : nom.extension
+    $image = $nomAleatoire . "." . $extension;
+
+    // Enfin, je déplace l'image de son emplacement temporaire ($_FILES['imageChaussure']['tmp_name'])
+    // vers le dossier uploads que j'ai créé, avec le nouveau nom ($nomAleatoire).
+    move_uploaded_file($_FILES['imageChaussure']['tmp_name'], 'uploads/' . $image );
+}
+
 ```
 
 ---
@@ -421,192 +589,6 @@ On construit un template en HTML qui affichera notre élément.
 </ul>
 ...
 ``` 
-
-## Traitement des fichiers
-
-Les fichiers dans les formulaires sont transmis par la variable `$_FILES`.
-
-### Création du dossier Uploads
-
-On créée à la racine du projet un dossier `/uploads` qui contiendra les fichiers envoyés par les utilisateurs.
-
-
-### Modification du formulaire
-
-Pour traiter les fichiers dans les formulaires, il est **obligatoire** de modifier le formulaire comme suit en ajoutant l'attribut `enctype="multipart/form-data"` :
-
-```html
-<form action="save.php" method="post" enctype="multipart/form-data">
-    ...
-</form>
-```
-
-### Input file
-On ajoute au formulaire un input de type "file" en n'oubliant pas l'attribut "name" :
-
-```html
-...
-    <label for="elementImage">Photo</label>
-    <input type="file" name="photoElement" id="elementImage">  
-```
-
-### Récupération des données dans save.php
-
-#### $_FILES
-
-La variable $_FILES contient tous les fichiers uploadés via le formulaire :
-
-```
-array (size=1)
-  'photoElement' => 
-    array (size=5)
-      'name' => string 'shoe04.jpg' (length=10)
-      'type' => string 'image/jpeg' (length=10)
-      'tmp_name' => string 'C:\wamp64\tmp\phpCCC7.tmp' (length=25)
-      'error' => int 0
-      'size' => int 3935
-```
-
-On a accès aux éléments suivants :
-
-```php
-$_FILES['photoElement']; // On utilise le "name" issu du formulaire
-$_FILES['photoElement']['name']; // Contient le nom du fichier envoyé par le visiteur.
-$_FILES['photoElement']['type']; // Indique le type du fichier envoyé. Si c'est une image gif par exemple, le type sera image/gif.
-$_FILES['photoElement']['tmp_name']; // Juste après l'envoi, le fichier est placé dans un répertoire temporaire sur le serveur en attendant que votre script PHP décide si oui ou non il accepte de le stocker pour de bon. Cette variable contient l'emplacement temporaire du fichier.
-$_FILES['photoElement']['error']; // Contient un code d'erreur permettant de savoir si l'envoi s'est bien effectué ou s'il y a eu un problème et si oui, lequel. La variable vaut 0 s'il n'y a pas eu d'erreur.
-$_FILES['photoElement']['size']; // Indique la taille du fichier envoyé. Attention : cette taille est en octets. Il faut environ 1 000 octets pour faire 1 Ko, et 1 000 000 d'octets pour faire 1 Mo. Attention : la taille de l'envoi est limitée par PHP. Par défaut, impossible d'uploader des fichiers de plus de 8 Mo.
-```
-
-#### pathinfo()
-
-On a aussi accès à la décomposition du nom du fichier avec ` pathinfo($_FILES['photoElement']['name'])`:
-
-```
-array (size=4)
-  'dirname' => string '.' (length=1)
-  'basename' => string 'shoe04.jpg' (length=10)
-  'extension' => string 'jpg' (length=3)
-  'filename' => string 'shoe04' (length=6)
-```
-
-> **Attention :** pathinfo() prend en argument le "name" du fichier envoyé ! Soit : `$_FILES['photoElement']['name']` et pas que `$_FILES['photoElement']`
-
-On a accès aux éléments suivants :
-```php
-pathinfo($_FILES['photoElement']['name'])['dirname']; // Dossier dans lequel se trouve le fichier
-pathinfo($_FILES['photoElement']['name'])['basename']; // nom complet du fichier
-pathinfo($_FILES['photoElement']['name'])['extension']; // Extension du fichier
-pathinfo($_FILES['photoElement']['name'])['filename']; // Nom du fichier sans extension
-```
-
-Comme il est difficile d'utiliser des noms de variables et fonctions aussi longs, on va utiliser des variables intermédiaires :
-
-```php
-
-// Je créée une variable pour le nom du fichier, qui est l'argument de pathinfo() :
-
-$fileName = $_FILES['photoElement']['name'];
-
-// Je peux donc utiliser pathinfo() comme suit : pathinfo($fileName);
-// Comme je veux utiliser des clés dans le tableau que me retourne pathinfo(), je créée une autre variable intermédiaire :
-
-$pathInfo = pathinfo($fileName);
-
-
-// J'ai donc accès aux mêmes variables que ci-dessus de cette façon :
-
-$pathInfo['dirname'];
-$pathInfo['basename'];
-$pathInfo['extension'];
-$pathInfo['filename'];
-
-```
-
-### Validations de l'input
-
-Comme tous les autres champs de formulaire, j'utilise le même bloc pour valider les données :
-
-```php
-
-/**
- * 1. VARIABLES INTERMEDIAIRES
- * Si j'ai besoin de variables pour les validations
- */
-
-// Je liste les extensions autorisées
-$extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
-
-/**
- * 2. TEST D'EXISTENCE
- * Je vérifie que ma variable existe dans le formulaire.
- * Comme c'est un champ non obligatoire, si elle n'existe pas, je 
- * retourne $image = null plutôt qu'une erreur.
- */
-
-// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur.
-// J'utile le NOM du fichier (name) et non le champ lui même ! En effet, le champ existe toujours, le nom n'existe que si on a une image.
-if (empty($_FILES['imageChaussure']['name'])) {
-    $image = null;
-}
-
-/**
- * 3. VALIDATIONS
- * J'effectue mes différentes validations sur mon input. C'est un input type=file,
- * il y a des validations propres aux fichiers à effectuer :
- */
-
-// Est-ce qu'il y a eu une erreur lors de l'upload ?
-elseif($_FILES['imageChaussure']['error'] !== 0) {
-    echo "Attention, erreur lors de l'upload de l'image.";
-}
-
-// Testons si le fichier n'est pas trop gros
-elseif ($_FILES['imageChaussure']['size'] >= 800000) {
-    echo "Attention, l'image est trop grosse.";
-}
-
-
-/**
- * Testons si l'extension est autorisée
- * Rappel de ci-dessus, pour accéder à l'extension, j'utilise pathinfo() avec en argument
- * le nom de l'image : $_FILES['imageChaussure']['name'].
- * 
- * Mon pathinfo est donc : pathinfo($_FILES['imageChaussure']['name']).
- * 
- * J'ai besoin de l'extension du pathinfo ( ['extension'] ), j'y accède avec :
- * pathinfo($_FILES['imageChaussure']['name'])['extension']
- * 
- * !!! Attention aux parenthèses et crochets !
- */
-
-elseif (!in_array( pathinfo($_FILES['imageChaussure']['name'])['extension'], $extensionsAutorisees) ) {
-    echo "Attention, le fichier n'est pas autorisé.";
-}
-
-/**
- * 4. ENREGISTREMENT
- * Enfin, si je passe toutes les validations, au lieu d'avoir un $image = null comme au début,
- * je met ma donnée dans $image.
- */
-else {
-
-    // Pour ne pas avoir 2 fichiers identiques en noms, je créée un nom aléatoire que je peux préfixer si besoin.
-    $nomAleatoire = "shoe_" . uniqid();
-
-    // Pour rappel, l'extension est accessible avec pathinfo($_FILES['imageChaussure']['name'])['extension'].
-    $extension = pathinfo($_FILES['imageChaussure']['name'])['extension'];
-
-    // Le nom de mon image est : nom.extension
-    $image = $nomAleatoire . "." . $extension;
-
-    // Enfin, je déplace l'image de son emplacement temporaire ($_FILES['imageChaussure']['tmp_name'])
-    // vers le dossier uploads que j'ai créé, avec le nouveau nom ($nomAleatoire).
-    move_uploaded_file($_FILES['imageChaussure']['tmp_name'], 'uploads/' . $image );
-}
-
-```
-
 
 ## U : Update
 Pour faire la partie Update, nous allons :
