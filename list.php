@@ -86,6 +86,7 @@
                         <td><?= $f['note']; ?>/5</td>
                         <td>
                             <a href="show.php?film=<?= $f['id']; ?>" class="btn btn-primary">Voir</a>
+                            <a href="add.php?film=<?= $f['id']; ?>" class="btn btn-warning">Editer</a>
                             <a href="delete.php?film=<?= $f['id']; ?>" class="btn btn-danger">Supprimer</a>
                         </td>
                     </tr>

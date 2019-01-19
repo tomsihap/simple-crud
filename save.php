@@ -186,7 +186,7 @@ else {
 $extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
 
 // Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur
-if (empty($_FILES['affiche'])) {
+if (empty($_FILES['affiche']['name'])) {
     $image = null;
 }
 
@@ -263,21 +263,80 @@ else {
     // On utilise nos variables créées plutôt que les $_POST car 1/ elles ont passé les validations ci-dessus
     // et 2/ si elles n'ont pas été renseignées par l'utilisateur... elles sont égales à null !
 
-    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, image)
-            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note, :image)";
+    if (empty($_POST['id_edit'])) {
 
-    $res = $bdd->prepare($req);
+        $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, image)
+                VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note, :image)";
 
-    $res->execute([
-        'titre' => $titre,
-        'genre' => $genre,
-        'duree' => $duree,
-        'date_de_sortie' => $dateDeSortie,
-        'realisateur' => $realisateur,
-        'acteur_principal' => $acteurPrincipal,
-        'note' => $note,
-        'image' => $image
-    ]);
+        $res = $bdd->prepare($req);
+
+        $res->execute([
+            'titre' => $titre,
+            'genre' => $genre,
+            'duree' => $duree,
+            'date_de_sortie' => $dateDeSortie,
+            'realisateur' => $realisateur,
+            'acteur_principal' => $acteurPrincipal,
+            'note' => $note,
+            'image' => $image
+        ]);
+    }
+
+    // Sinon, on va valider $_POST['id_edit'] comme n'importe quel champ
+    else {
+
+        // Validation...
+        if (intval($_POST['id_edit']) <= 0) {
+            echo "L'ID de l'élément édité n'est pas valide.";
+        }
+
+        // Sinon, c'est OK on continue :
+        else {
+            $idEdit = $_POST['id_edit'];
+
+            // On vérifie ICI que si l'on a reçu une image : si dans les validateurs au dessus on n'a pas eu d'image, on fait la requête sans le champ image :
+            if ($image !== null) {
+                $req = "UPDATE films 
+                        SET(titre = :titre, genre = :genre, duree = :duree, date_de_sortie = :date_de_sortie, realisateur = :realisateur, acteur_principal = :acteur_principal, note = :note)
+                        WHERE id = :id"; // IMPORTANT, on n'oublie pas le WHERE lors d'un UPDATE ou d'un DELETE !!!
+
+                    $res = $bdd->prepare($req);
+
+                    $res->execute([
+                        'id'    => $idEdit, // On ajoute $idEdit à l'execute du UPDATE !
+                        'titre' => $titre,
+                        'genre' => $genre,
+                        'duree' => $duree,
+                        'date_de_sortie' => $dateDeSortie,
+                        'realisateur' => $realisateur,
+                        'acteur_principal' => $acteurPrincipal,
+                        'note' => $note,
+                    ]);
+            }
+
+            // Sinon, c'est qu'on a une image, on fait la requête avec l'image :
+            else {
+
+                $req = "UPDATE films 
+                        SET(titre = :titre, genre = :genre, duree = :duree, date_de_sortie = :date_de_sortie, realisateur = :realisateur, acteur_principal = :acteur_principal, note = :note, image = :image)
+                        WHERE id = :id"; // IMPORTANT, on n'oublie pas le WHERE lors d'un UPDATE ou d'un DELETE !!!
+
+                    $res = $bdd->prepare($req);
+
+                    $res->execute([
+                        'id'    => $idEdit, // On ajoute $idEdit à l'execute du UPDATE !
+                        'titre' => $titre,
+                        'genre' => $genre,
+                        'duree' => $duree,
+                        'date_de_sortie' => $dateDeSortie,
+                        'realisateur' => $realisateur,
+                        'acteur_principal' => $acteurPrincipal,
+                        'note' => $note,
+                        'image' => $image
+                    ]);
+            }
+        }
+    }
 
     // Eventuellement, j'affiche la dernière erreur SQL
     var_dump( $res->errorInfo() );

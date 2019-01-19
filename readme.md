@@ -544,7 +544,8 @@ $extensionsAutorisees = ['jpg', 'jpeg', 'gif', 'png'];
  * retourne $image = null plutôt qu'une erreur.
  */
 
-// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur
+// Testons si le fichier a bien été envoyé et s'il n'y a pas d'erreur.
+// J'utile le NOM du fichier (name) et non le champ lui même ! En effet, le champ existe toujours, le nom n'existe que si on a une image.
 if (empty($_FILES['imageChaussure']['name'])) {
     $image = null;
 }
@@ -604,4 +605,210 @@ else {
     move_uploaded_file($_FILES['imageChaussure']['tmp_name'], 'uploads/' . $image );
 }
 
+```
+
+
+## U : Update
+Pour faire la partie Update, nous allons :
+1. Créer un lien dans la page list.php vers add.php?id_element=5 par exemple
+2. Modifier la page add.php, la page d'ajout d'un élément : si on a reçu un $_GET['id_element'], alors on est en mode édition et plus en mode création. Cela nous permet d'avoir 1 formulaire pour 2 actions (DRY : Dont Repeat Yourself).
+3. Dans ce cas, on va faire un SELECT pour récupérer l'élément à éditer
+4. On remplit les values par les valeurs de l'élément à éditer
+5. On ajoute un champ input:hidden qui contiendra l'ID de l'élément édité, si et seulement si on a un élément à éditer (sinon, on est juste sur add.php, on n'a aucun ID à mettre dedans ;) )
+6. On modifiera save.php : si on a reçu un $_POST['id_edition'], on fera une requête UPDATE plutôt qu'une requête INSERT INTO.
+
+
+### Créer un lien dans list.php
+Dans le tableau, on ajoute une action "Editer" qui pointe vers la page du formulaire add.php :
+```php
+...
+    <a href="add.php?film=<?= $f['id']; ?>" class="btn btn-warning">Editer</a>
+...
+```
+
+### Vérification dans add.php
+
+#### Ajout d'un $film = null
+Par défaut dans add.php, on aura une variable $film nulle :
+```php
+// add.php
+$film = null;
+...
+```
+
+Cela nous permettra d'avoir une variable à tester plus tard : si elle est nulle, c'est qu'on n'a pas de film à éditer.
+
+#### Est-ce qu'il y a une variable $_GET['film'] ?
+
+On vérifie si on a une variable $_GET['film'] : si oui, on vient d'un lien d'édition, sinon on vient du lien "Ajouter".
+
+```php
+// add.php
+...
+if (!empty($_GET['film'])) {
+  
+}
+```
+Pas besoin de else ici : en effet, si on a un film on va le chercher, sinon... on n'a rien à faire.
+
+#### On va récupérer le film
+
+```php
+// add.php
+if (!empty($_GET['film'])) {
+    // On a un $_GET['id'] ! On essaie donc d'éditer un élément.
+    // On va récupérer l'élément à éditer. Même code que pour show.php !
+    
+    // Bien sûr, en "prod", on n'hésite pas à mettre des validations de $_GET, éventuellement des tests d'authentification...
+
+    $host       = 'localhost'; // Hôte de la base de données
+    $dbname     = 'phpcourse'; // Nom de la bdd
+    $port       = '3308'; // Ou 3308 selon la configuration
+    $login      = 'root'; // Par défaut dans WAMP
+    $password   = ''; // Par défaut dans WAMP (pour MAMP : 'root')
+
+    try {
+        // Essaie de faire ce script...
+        $bdd = new PDO('mysql:host='.$host.';dbname='.$dbname.';charset=utf8;port='.$port, $login, $password);
+    }
+    catch (Exception $e) {
+        // Sinon, capture l'erreur et affiche la
+        die('Erreur : ' . $e->getMessage());
+    }
+
+    $requete = "SELECT * FROM films WHERE id = " . $_GET['film'];
+
+    $res = $bdd->query($requete);
+
+    $film = $res->fetch();
+}
+```
+
+
+Pour chacun des inputs du formulaire, on va ajouter une value si on a un film récupéré, grâce à un ternaire `<?= ($film) ? $film['titre'] : null; ?>` :
+```php
+<input class="form-control" type="text" name="titre" id="filmTitle" required value="<?= ($film) ? $film['titre'] : null; ?>">
+```
+
+Pour les select, c'est un peu différent : on ne doit pas remplir une value mais ajouter l'attribut "selected" sur le champ correspondant :
+
+```php
+<option value="horreur" <?= ($film) ? ($film['genre'] ==  'horreur' ? 'selected' : '') : ''; ?> >Horreur</option>
+```
+
+Voici comment on lit cette double ternaire : 
+```
+- Est-ce que $film existe ?
+- - SI OUI :
+- - - Est-ce que le genre est "horreur" ?
+- - - - SI OUI : 
+- - - - - On affiche 'selected'
+- - - - SI NON :
+- - - - - On n'affiche rien ''
+- - SI NON :
+- - - On n'affiche rien ''
+```
+
+Pour les champs File, c'est aussi différent : ils ne peuvent pas avoir une valeur par défaut, on ne modifie rien. Par contre, dans save.php, on testera si l'utilisateur a uploadé une nouvelle photo.
+
+#### Champ input:hidden
+Enfin, très important : on va ajouter un champ input:hidden uniquement si on est en édition. Cela nous permettra d'envoyer l'information à save.php qu'on est en mode UPDATE et plus en mode INSERT INTO. On ajoute, n'importe où dans le formulaire :
+
+```php
+// add.php
+...
+<?php if ($film) {?>
+            <input type="hidden" name="id_edit" value="<?= $film['id']; ?>">
+<?php } ?>
+...
+```
+
+### Changements dans save.php
+Dans la logique du formulaire, save.php, on va maintenant tester si on a reçu un $_POST['id_edit'] (ajouté au point précédent). Comme les validations des autres champs ne changent pas, c'est seulement la partie BDD que l'on change.
+
+On fera aussi la validation de s'il y a une image ou non :
+
+
+```php
+// save.php
+...
+
+// Si on n'a pas de id_edit, alors on continue avec la requête d'origine :
+if (empty($_POST['id_edit'])) {
+    $req = "INSERT INTO films(titre, genre, duree, date_de_sortie, realisateur, acteur_principal, note, image)
+            VALUES(:titre, :genre, :duree, :date_de_sortie, :realisateur, :acteur_principal, :note, :image)";
+
+    $res = $bdd->prepare($req);
+
+    $res->execute([
+        'titre' => $titre,
+        'genre' => $genre,
+        'duree' => $duree,
+        'date_de_sortie' => $dateDeSortie,
+        'realisateur' => $realisateur,
+        'acteur_principal' => $acteurPrincipal,
+        'note' => $note,
+        'image' => $image
+    ]);
+
+}
+
+// Sinon, on va valider $_POST['id_edit'] comme n'importe quel champ
+else {
+
+    // Validation...
+    if (intval($_POST['id_edit']) <= 0) {
+        echo "L'ID de l'élément édité n'est pas valide.";
+    }
+
+    // Sinon, c'est OK on continue :
+    else {
+        $idEdit = $_POST['id_edit'];
+
+        // On vérifie ICI que si l'on a reçu une image : si dans les validateurs au dessus on n'a pas eu d'image, on fait la requête sans le champ image :
+        if ($image !== null) {
+            $req = "UPDATE films 
+                    SET(titre = :titre, genre = :genre, duree = :duree, date_de_sortie = :date_de_sortie, realisateur = :realisateur, acteur_principal = :acteur_principal, note = :note)
+                    WHERE id = :id"; // IMPORTANT, on n'oublie pas le WHERE lors d'un UPDATE ou d'un DELETE !!!
+
+                $res = $bdd->prepare($req);
+
+                $res->execute([
+                    'id'    => $idEdit, // On ajoute $idEdit à l'execute du UPDATE !
+                    'titre' => $titre,
+                    'genre' => $genre,
+                    'duree' => $duree,
+                    'date_de_sortie' => $dateDeSortie,
+                    'realisateur' => $realisateur,
+                    'acteur_principal' => $acteurPrincipal,
+                    'note' => $note,
+                ]);
+        }
+
+        // Sinon, c'est qu'on a une image, on fait la requête avec l'image :
+        else {
+
+            $req = "UPDATE films 
+                    SET(titre = :titre, genre = :genre, duree = :duree, date_de_sortie = :date_de_sortie, realisateur = :realisateur, acteur_principal = :acteur_principal, note = :note, image = :image)
+                    WHERE id = :id"; // IMPORTANT, on n'oublie pas le WHERE lors d'un UPDATE ou d'un DELETE !!!
+
+                $res = $bdd->prepare($req);
+
+                $res->execute([
+                    'id'    => $idEdit, // On ajoute $idEdit à l'execute du UPDATE !
+                    'titre' => $titre,
+                    'genre' => $genre,
+                    'duree' => $duree,
+                    'date_de_sortie' => $dateDeSortie,
+                    'realisateur' => $realisateur,
+                    'acteur_principal' => $acteurPrincipal,
+                    'note' => $note,
+                    'image' => $image
+                ]);
+        }
+    }
+}
+
+
+...
 ```
