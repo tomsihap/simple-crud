@@ -9,15 +9,15 @@ La structure est la suivante :
 - `list.php` Affichage de tous les éléments
 - `show.php` Affichage d'un élément
 - `delete.php` Traitement de la suppression d'un élément
-- 
 
-  - [Base de données](#base-de-donn%C3%A9es)
-  - [C : Create](#c--create)
-  - [INSERT: Traitement des fichiers](#insert-traitement-des-fichiers)
-  - [R : Read](#r--read)
-  - [Browse](#browse)
-  - [D : Delete](#d--delete)
-  - [U : Update](#u--update)
+## Sommaire
+- [Base de données](#base-de-donn%C3%A9es)
+- [C : Create](#c--create)
+- [INSERT: Traitement des fichiers](#insert-traitement-des-fichiers)
+- [R : Read](#r--read)
+- [Browse](#browse)
+- [D : Delete](#d--delete)
+- [U : Update](#u--update)
 
 ## Base de données
 On créée la base de données dans PHPMyAdmin ou Mysql Workbench.
